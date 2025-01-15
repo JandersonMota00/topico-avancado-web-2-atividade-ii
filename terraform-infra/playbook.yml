@@ -1,0 +1,58 @@
+---
+- name: Instalar e Configurar Docker
+  hosts: provisioned_machine
+  become: yes  # Eleva privilégios para tarefas que precisam de sudo
+  tasks:
+    - name: Atualizar lista de pacotes
+      apt:
+        update_cache: yes
+
+    - name: Instalar dependências do Docker
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+
+    - name: Adicionar chave GPG do Docker
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Adicionar repositório oficial do Docker
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+        state: present
+
+    - name: Atualizar lista de pacotes após adicionar repositório
+      apt:
+        update_cache: yes
+
+    - name: Instalar Docker CE
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Adicionar usuário ao grupo docker
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Habilitar e iniciar serviço Docker
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Verificar versão do Docker (opcional para debug)
+      command: docker --version
+      register: docker_version_output
+
+    - name: Mostrar versão do Docker (opcional)
+      debug:
+        msg: "Docker instalado: {{ docker_version_output.stdout }}"
+

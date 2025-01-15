@@ -1,0 +1,8 @@
+#cloud-config
+users:
+  - default
+  - name: terraform
+    ssh-authorized-keys:
+      - "~/.ssh/id_rsa.pub"
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    shell: /bin/bash
